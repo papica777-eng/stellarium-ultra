@@ -64,8 +64,40 @@
     { query: 'M16', name: 'Eagle Nebula (M16)', sub: 'Home of the Pillars of Creation', kind: 'Nebula', icon: 'bright_emission_nebula.svg', fov: 3 },
     { query: 'M20', name: 'Trifid Nebula (M20)', sub: 'Emission + Reflection Nebula in Sagittarius', kind: 'Nebula', icon: 'bright_emission_nebula.svg', fov: 3 },
     { query: 'NGC 869', name: 'Double Cluster (NGC 869)', sub: 'Twin Open Clusters in Perseus', kind: 'Open Cluster', icon: 'open_galactic_cluster.svg', fov: 4 },
-    { query: 'NGC 3372', raDecDeg: [159.23, -58.62], name: 'Carina Cliffs (JWST Plate)', sub: 'Calibrated Webb Deep-Space Mosaic', kind: 'JWST Plate', icon: 'bright_emission_nebula.svg', fov: 1.8 }
+    { query: 'NGC 3372', raDecDeg: [159.23, -58.62], name: 'Carina Cliffs (JWST Plate)', sub: 'JWST NIRCam Clarified Mosaic · 7,600 LY', kind: 'JWST Plate', icon: 'bright_emission_nebula.svg', fov: 1.8, plateImg: './symbols/plates/jwst_carina_clarified.jpg', preferArchive: true, sglInfo: { dist: '7,600 LY', scale: '16 LY Cliffs', instrument: 'JWST NIRCam', type: 'Star-Forming Region' } },
+    { query: 'Cas A', raDecDeg: [350.85, 58.815], name: 'Cassiopeia A (JWST MIRI)', sub: 'Clarified Supernova Remnant · 11,000 LY', kind: 'Supernova Remnant', icon: 'nebula_default.svg', fov: 0.9, plateImg: './symbols/plates/cassiopeia_a_clarified.jpg', preferArchive: true, sglInfo: { dist: '11,000 LY', scale: '10 LY Shell', instrument: 'JWST MIRI', type: 'Supernova Remnant' } },
+    { query: 'SMACS J0723', raDecDeg: [110.83, -73.45], name: 'JWST SMACS 0723 Deep Field', sub: 'Gravitational Lens Galaxy Cluster · 4.6B LY', kind: 'Galaxy Cluster', icon: 'group_of_galaxies.svg', fov: 0.45, plateImg: './symbols/plates/jwst_smacs0723_clarified.jpg', preferArchive: true, sglInfo: { dist: '4.6 Billion LY', scale: 'Gravitational Lens', instrument: 'JWST NIRCam', type: 'Galaxy Cluster' } },
+    { query: 'HUDF', raDecDeg: [53.16, -27.79], name: 'Hubble Ultra Deep Field', sub: 'Clarified 10,000-Galaxy Deep Field · 13.2B LY', kind: 'Deep Field', icon: 'group_of_galaxies.svg', fov: 0.45, plateImg: './symbols/plates/hubble_deep_field_clarified.jpg', preferArchive: true, sglInfo: { dist: '13.2 Billion LY', scale: '10,000+ Galaxies', instrument: 'Hubble ACS/WFC3', type: 'Cosmological Deep Field' } },
+    { query: 'TRAPPIST-1', raDecDeg: [346.62, -5.04], name: 'TRAPPIST-1e (SGL 550 AU)', sub: 'Temperate Rocky Exoplanet · 39.46 LY (Aquarius)', kind: 'Exoplanet', icon: 'planet.svg', fov: 0.6, plateImg: './symbols/plates/trappist_1e.jpg', preferArchive: true, sglInfo: { dist: '39.46 LY', scale: '0.92 R_Earth · 5.65 g/cm³', instrument: 'Solar Gravitational Lens (550 AU)', type: 'Habitable Exoplanet' } },
+    { query: 'Kepler-1649', raDecDeg: [297.50, 41.75], name: 'Kepler-1649c (SGL 550 AU)', sub: 'Earth-Sized Habitable Zone World · 301 LY', kind: 'Exoplanet', icon: 'planet.svg', fov: 0.6, plateImg: './symbols/plates/kepler_1649c.jpg', preferArchive: true, sglInfo: { dist: '301.0 LY', scale: '1.06 R_Earth · 75% Solar Flux', instrument: 'Solar Gravitational Lens (550 AU)', type: 'Habitable Exoplanet' } },
+    { query: 'Kepler-186', raDecDeg: [298.65, 43.96], name: 'Kepler-186f (SGL 550 AU)', sub: 'First Earth-Size Habitable Exoplanet · 582 LY', kind: 'Exoplanet', icon: 'planet.svg', fov: 0.6, plateImg: './symbols/plates/kepler_186f.jpg', preferArchive: true, sglInfo: { dist: '582 LY', scale: '1.17 R_Earth', instrument: 'Solar Gravitational Lens (550 AU)', type: 'Habitable Exoplanet' } },
+    { query: 'NAME Earth', raDecDeg: [180.0, 0.0], name: 'Planet Earth (DSCOVR EPIC)', sub: 'Sun-Earth L1 Lagrange Blue Marble · 1.5M km', kind: 'Biosphere', icon: 'planet.svg', fov: 6.0, plateImg: './symbols/plates/epic_earth.jpg', preferArchive: true, sglInfo: { dist: '1.5M km (L1)', scale: '1.00 R_Earth · 12,742 km', instrument: 'DSCOVR EPIC', type: 'Reference Biosphere' } }
   ];
+
+  function findArchivalPlate(obj, primaryName) {
+    if (obj && obj.__catalogItem && obj.__catalogItem.plateImg) {
+      return {
+        plateImg: obj.__catalogItem.plateImg,
+        plateTitle: obj.__catalogItem.name,
+        sglInfo: obj.__catalogItem.sglInfo || null,
+        preferArchive: !!obj.__catalogItem.preferArchive
+      };
+    }
+    const clean = (primaryName || '').toLowerCase();
+    return SKY_CATALOG.find((item) => {
+      if (!item.plateImg) return false;
+      const q = item.query.toLowerCase();
+      return (q && clean.includes(q.replace(/^name\s+/i, ''))) ||
+        (clean.includes('carina') && item.plateImg.includes('carina')) ||
+        (clean.includes('cassiopeia') && item.plateImg.includes('cassiopeia')) ||
+        (clean.includes('smacs') && item.plateImg.includes('smacs')) ||
+        (clean.includes('hubble') && item.plateImg.includes('hubble')) ||
+        (clean.includes('trappist') && item.plateImg.includes('trappist')) ||
+        (clean.includes('kepler-1649') && item.plateImg.includes('kepler_1649c')) ||
+        (clean.includes('kepler-186') && item.plateImg.includes('kepler_186f')) ||
+        (clean === 'earth' && item.plateImg.includes('epic_earth'));
+    }) || null;
+  }
 
   const VIS_PLANETS = [
     { q: 'NAME Sun', name: 'Sun', icon: 'sun.svg', fov: 4 },
@@ -95,6 +127,10 @@
     skyCultureKey: 'western',
     hdrPostFx: null,
     astroRenderer: null,
+    pendingCatalogObj: null,
+    pendingCatalogTs: 0,
+    loupeZoom: 4.0,
+    activePlate: null,
     leafletMap: null,
     leafletMarker: null,
     timeRepeatTimer: null
@@ -274,16 +310,24 @@
         c.comets.addDataSource({ url: `${baseUrl}skydata/CometEls.txt`, key: 'mpc_comets' });
         c.satellites.addDataSource({ url: `${baseUrl}skydata/tle_satellite.jsonl.gz`, key: 'jsonl/sat' });
 
-        // Calibrated Deep-Space JWST Plate Layer (Carina Cliffs NGC 3324 in ICRF)
+        // Calibrated Deep-Space JWST & Hubble Plate Layer in ICRF
         try {
           const jwstLayer = stel.createLayer({ id: 'jwst-plates', z: 5, visible: true });
-          const photo = jwstLayer.add('photo', {
-            url: `${baseUrl}symbols/jwst_carina.webp`,
-            calibration: { ra: 159.23, dec: -58.62, pixscale: 1.6, orientation: 18 },
-            render_shape: false,
-            visible: true
+          const deepPlates = [
+            { url: `${baseUrl}symbols/plates/jwst_carina_clarified.jpg`, ra: 159.23, dec: -58.62, pixscale: 1.6, orientation: 18 },
+            { url: `${baseUrl}symbols/plates/cassiopeia_a_clarified.jpg`, ra: 350.85, dec: 58.815, pixscale: 0.85, orientation: 0 },
+            { url: `${baseUrl}symbols/plates/jwst_smacs0723_clarified.jpg`, ra: 110.83, dec: -73.45, pixscale: 0.35, orientation: 0 },
+            { url: `${baseUrl}symbols/plates/hubble_deep_field_clarified.jpg`, ra: 53.16, dec: -27.79, pixscale: 0.32, orientation: 0 }
+          ];
+          deepPlates.forEach((p) => {
+            const photo = jwstLayer.add('photo', {
+              url: p.url,
+              calibration: { ra: p.ra, dec: p.dec, pixscale: p.pixscale, orientation: p.orientation },
+              render_shape: false,
+              visible: true
+            });
+            if (photo) photo.visible = true;
           });
-          if (photo) photo.visible = true;
         } catch (_) {}
 
         // Authentic Observatory Sky Visuals + Active Meteors + Deep-Sky Survey
@@ -319,10 +363,19 @@
         const viewVec = stel.convertFrame(stel.observer, 'OBSERVED', 'ICRF', stel.s2c(165 * D2R, 24 * D2R));
         stel.lookAt(viewVec, 0.05);
 
-        // Reactive C/WASM Object Selection Listener
+        // Reactive C/WASM Object Selection Listener (stel.change delivers core; true target is core.selection)
         stel.change((obj, attr) => {
           if (attr === 'selection') {
-            handleSelectionChange(obj);
+            const sel = (obj && obj.selection !== undefined) ? obj.selection : (state.core ? state.core.selection : null);
+            if (sel) {
+              state.pendingCatalogObj = null;
+              handleSelectionChange(sel);
+            } else if (state.pendingCatalogObj && (Date.now() - state.pendingCatalogTs) < 400) {
+              handleSelectionChange(state.pendingCatalogObj);
+              state.pendingCatalogObj = null;
+            } else {
+              handleSelectionChange(null);
+            }
           }
           if (attr === 'fov') {
             updateHudReadout();
@@ -362,11 +415,12 @@
     const stel = state.stel;
     if (!stel || !obj) return;
 
+    const cat = obj.__catalogItem || null;
     let designations = [];
     try { designations = obj.designations ? obj.designations() : []; } catch (_) {}
-    const cleanList = designations.map((s) => s.replace(/^NAME\s+/i, '').trim()).filter(Boolean);
-    const primary = cleanList[0] || 'Celestial Object';
-    const secondary = cleanList.slice(1, 5).join(' · ') || 'Stellarium WASM Deep Sky / Ephemeris';
+    const cleanList = designations.map((s) => String(s).replace(/^NAME\s+/i, '').trim()).filter(Boolean);
+    const primary = cleanList[0] || (cat && cat.name) || 'Celestial Object';
+    const secondary = (cat ? cat.sub : cleanList.slice(1, 5).join(' · ')) || 'Stellarium WASM Deep Sky / Ephemeris';
 
     let cultural = '';
     try {
@@ -375,13 +429,20 @@
       else if (cNames && typeof cNames === 'object' && Object.values(cNames).length > 0) cultural = ` | Culture: ${Object.values(cNames)[0]}`;
     } catch (_) {}
 
-    $('scIcon').src = pickTargetSvg(obj, primary);
-    $('scKicker').textContent = `OBJECT TYPE // ${String(obj.type || 'CELESTIAL').toUpperCase()}`;
+    $('scIcon').src = (cat && cat.icon) ? `./symbols/target_types/${cat.icon}` : pickTargetSvg(obj, primary);
+    $('scKicker').textContent = `OBJECT TYPE // ${String((cat && cat.kind) || obj.type || 'CELESTIAL').toUpperCase()}`;
     $('scTitle').textContent = primary;
     $('scSubnames').textContent = secondary + cultural;
 
-    const vmag = obj.getInfo ? obj.getInfo('vmag', stel.observer) : null;
-    const radec = obj.getInfo ? obj.getInfo('radec', stel.observer) : null;
+    let vmag = null, radec = null, phaseFrac = null, distAu = null;
+    try { vmag = obj.getInfo ? obj.getInfo('vmag', stel.observer) : null; } catch (_) {}
+    try { radec = obj.getInfo ? obj.getInfo('radec', stel.observer) : null; } catch (_) {}
+    try { phaseFrac = obj.getInfo ? obj.getInfo('phase', stel.observer) : null; } catch (_) {}
+    try { distAu = obj.getInfo ? obj.getInfo('distance', stel.observer) : null; } catch (_) {}
+
+    if (!radec && cat && cat.raDecDeg) {
+      radec = stel.s2c(cat.raDecDeg[0] * D2R, cat.raDecDeg[1] * D2R);
+    }
 
     let ra2000 = '--', dec2000 = '--', raJnow = '--', decJnow = '--', azStr = '--', altStr = '--', altDeg = 0;
     if (radec) {
@@ -402,26 +463,48 @@
     }
 
     let visText = 'Circumpolar / Always';
-    let riseText = '--:--', setText = '--:--';
     try {
       const vis = obj.computeVisibility ? obj.computeVisibility({ obs: stel.observer }) : null;
       if (Array.isArray(vis) && vis.length > 0) {
-        riseText = mjdToLocalHHMM(stel, vis[0].rise);
-        setText = mjdToLocalHHMM(stel, vis[0].set);
-        visText = `${riseText} -> ${setText}`;
+        visText = `${mjdToLocalHHMM(stel, vis[0].rise)} -> ${mjdToLocalHHMM(stel, vis[0].set)}`;
       }
     } catch (_) {}
 
-    $('scMag').textContent = typeof vmag === 'number' && isFinite(vmag) ? `${vmag.toFixed(2)} mag` : 'Catalog';
+    $('scMag').textContent = (typeof vmag === 'number' && isFinite(vmag))
+      ? `${vmag.toFixed(2)} mag`
+      : (cat && cat.sglInfo ? cat.sglInfo.type : 'Catalog');
     $('scAlt').textContent = altStr;
     $('scAz').textContent = azStr;
+
+    let extraRows = '';
+    if (typeof phaseFrac === 'number' && isFinite(phaseFrac)) {
+      extraRows += `<span>Illuminated Phase</span><span>${(phaseFrac * 100).toFixed(1)}% Lit</span>`;
+    }
+    if (typeof distAu === 'number' && isFinite(distAu) && distAu > 0) {
+      const distLabel = distAu < 0.01
+        ? `${Math.round(distAu * 149597870.7).toLocaleString()} km (${distAu.toFixed(5)} AU)`
+        : `${distAu.toFixed(4)} AU`;
+      extraRows += `<span>Observer Distance</span><span>${distLabel}</span>`;
+    }
+    if (cat && cat.sglInfo) {
+      extraRows += `
+        <span>Archival Distance</span><span>${cat.sglInfo.dist}</span>
+        <span>Scale / Instrument</span><span>${cat.sglInfo.scale} &bull; ${cat.sglInfo.instrument}</span>
+      `;
+    }
 
     $('scAstrometry').innerHTML = `
       <span>RA / Dec (J2000)</span><span>${ra2000} &bull; ${dec2000}</span>
       <span>RA / Dec (JNow)</span><span>${raJnow} &bull; ${decJnow}</span>
       <span>Rise / Set (Local)</span><span>${visText}</span>
+      ${extraRows}
       <span>Horizon State</span><span>${altDeg >= 0 ? 'Visible Above Horizon' : 'Below Horizon'}</span>
     `;
+
+    const plateMatch = findArchivalPlate(obj, primary);
+    $('btnOpenChamber').innerHTML = plateMatch
+      ? '&#128301; 1:1 Physics &amp; 4K Plate Loupe (Rust + GLSL)'
+      : '&#128301; 1:1 Physics Telescope View (Rust WASM + GLSL)';
   }
 
   // --------------------------------------------------------------------------
@@ -588,17 +671,39 @@
     });
   }
 
+  function makeCatalogDescriptor(item) {
+    const icrf = item.raDecDeg
+      ? state.stel.s2c(item.raDecDeg[0] * D2R, item.raDecDeg[1] * D2R)
+      : null;
+    return {
+      __catalogItem: item,
+      type: item.kind || 'Archive',
+      designations: () => [item.name],
+      getInfo: (key) => (key === 'radec' ? icrf : null)
+    };
+  }
+
   function focusCatalogItem(item) {
     if (!state.stel) return;
     const obj = state.stel.getObj(item.query);
     if (obj) {
+      state.pendingCatalogObj = null;
       state.stel.core.selection = obj;
       state.stel.pointAndLock(obj, 0.95);
       state.stel.zoomTo(item.fov * D2R, 0.95);
+      if (item.plateImg) {
+        // Attach archival metadata silently via name lookup in findArchivalPlate
+        renderSelectionCard(obj);
+      }
     } else if (item.raDecDeg) {
-      const icrf = state.stel.s2c(item.raDecDeg[0] * D2R, item.raDecDeg[1] * D2R);
-      state.stel.lookAt(icrf, 0.95);
+      const catObj = makeCatalogDescriptor(item);
+      state.pendingCatalogObj = catObj;
+      state.pendingCatalogTs = Date.now();
+      state.stel.core.selection = null;
+      const icrf = catObj.getInfo('radec');
+      if (icrf) state.stel.lookAt(icrf, 0.95);
       state.stel.zoomTo(item.fov * D2R, 0.95);
+      handleSelectionChange(catObj);
     }
   }
 
@@ -934,16 +1039,21 @@
       if (state.core) state.core.selection = null;
       $('btnUnlock').style.display = 'none';
     });
-    $('btnCardTrack').addEventListener('click', () => {
-      if (state.stel && state.selectedObj) {
-        state.stel.pointAndLock(state.selectedObj, 0.9);
+    const centerSelectedObj = (durationSec) => {
+      if (!state.stel || !state.selectedObj) return;
+      if (state.selectedObj.__catalogItem && state.selectedObj.__catalogItem.raDecDeg) {
+        const [raD, decD] = state.selectedObj.__catalogItem.raDecDeg;
+        state.stel.lookAt(state.stel.s2c(raD * D2R, decD * D2R), durationSec);
+      } else {
+        state.stel.pointAndLock(state.selectedObj, durationSec);
       }
-    });
+    };
+
+    $('btnCardTrack').addEventListener('click', () => centerSelectedObj(0.9));
     $('btnCardZoom').addEventListener('click', () => {
-      if (state.stel && state.selectedObj) {
-        state.stel.pointAndLock(state.selectedObj, 0.9);
-        state.stel.zoomTo(2 * D2R, 1.0);
-      }
+      if (!state.stel || !state.selectedObj) return;
+      centerSelectedObj(0.9);
+      state.stel.zoomTo(2 * D2R, 1.0);
     });
     $('btnEyepieceToggle').addEventListener('click', () => {
       state.eyepieceOn = !state.eyepieceOn;
@@ -953,11 +1063,33 @@
     $('eyepiecePresets').addEventListener('click', (ev) => {
       const btn = ev.target.closest('button[data-fov]');
       if (!btn || !state.stel) return;
-      if (state.selectedObj) state.stel.pointAndLock(state.selectedObj, 0.7);
+      if (state.selectedObj) centerSelectedObj(0.7);
       state.stel.zoomTo(Number(btn.dataset.fov) * D2R, 0.9);
     });
 
-    // 1:1 Millennium Astrophysics Telescope Chamber (Rust WASM + GLSL ES 3.00)
+    // 1:1 Millennium Astrophysics Telescope Chamber (Rust WASM + GLSL ES 3.00 + 4K Plate Loupe)
+    const setChamberBandMode = (bandVal) => {
+      const wantArchive = bandVal === 'archive' && !!state.activePlate;
+      document.querySelectorAll('#chBands button').forEach((b) => {
+        b.classList.toggle('active', b.dataset.band === (wantArchive ? 'archive' : String(bandVal)));
+      });
+      if (wantArchive) {
+        $('chLoupeStage').classList.add('active');
+        $('astroChamberCanvas').style.opacity = '0';
+        $('chOverlayHint').textContent = 'Move cursor over plate to inspect with 2x–15x Optical Loupe • Scroll wheel adjusts magnification';
+        if (state.astroRenderer) state.astroRenderer.stop();
+      } else {
+        $('chLoupeStage').classList.remove('active');
+        $('chLoupeLens').style.display = 'none';
+        $('astroChamberCanvas').style.opacity = '1';
+        $('chOverlayHint').textContent = 'Drag to inspect 3D geometry • Scroll to magnify • Illumination locked to ERFA solar phase';
+        if (state.astroRenderer) {
+          state.astroRenderer.band = Number(bandVal) || 0;
+          state.astroRenderer.start();
+        }
+      }
+    };
+
     const openAstroChamber = () => {
       if (!state.stel || !state.selectedObj || typeof window.MillenniumAstroRenderer !== 'function') return;
       if (!state.astroRenderer) {
@@ -966,9 +1098,13 @@
       const names = (state.selectedObj.designations && state.selectedObj.designations()) || [];
       const primary = (names[0] || 'Celestial Object').replace(/^NAME\s+/i, '');
       const phys = state.astroRenderer.solveObject(state.stel, state.selectedObj, primary);
+      const plate = findArchivalPlate(state.selectedObj, primary);
+      state.activePlate = plate;
 
       $('chTitle').textContent = primary;
-      $('chSub').textContent = phys.label || 'Millennium Rust WASM + GLSL ES 3.00 Radiative Transfer';
+      $('chSub').textContent = plate && plate.sglInfo
+        ? `${plate.sglInfo.instrument} Clarified Observation + Rust WASM Radiative Solver`
+        : (phys.label || 'Millennium Rust WASM + GLSL ES 3.00 Radiative Transfer');
 
       let html = `
         <div class="ct-box"><span>Shader Kernel</span><b>${['Planck + MHD Corona', 'Rayleigh / Hapke + Rings', 'Sersic + Dust Radiative', 'Volumetric Ha / OIII', 'King Dynamical Profile'][phys.kind]}</b></div>
@@ -991,15 +1127,35 @@
           <div class="ct-box"><span>Tilt Inclination</span><b>${(phys.incRad * R2D).toFixed(1)}&deg;</b></div>
         `;
       }
+      if (plate && plate.sglInfo) {
+        html += `
+          <div class="ct-box"><span>Archival Scale</span><b>${plate.sglInfo.dist} &bull; ${plate.sglInfo.scale}</b></div>
+        `;
+      }
       $('chTelemetry').innerHTML = html;
 
+      const btnArchive = $('btnBandArchive');
+      if (plate) {
+        btnArchive.style.display = 'inline-flex';
+        $('chArchiveImg').src = plate.plateImg;
+      } else {
+        btnArchive.style.display = 'none';
+        $('chArchiveImg').removeAttribute('src');
+      }
+
+      state.loupeZoom = 4.0;
+      $('rngLoupe').value = '4.0';
+      $('lblLoupeZoom').innerHTML = '4.0&times;';
+      $('chLoupeTag').textContent = '4.0x LOUPE';
       $('astroChamberModal').classList.add('open');
-      state.astroRenderer.start();
+      setChamberBandMode(plate && plate.preferArchive ? 'archive' : '0');
     };
 
     $('btnOpenChamber').addEventListener('click', openAstroChamber);
     const closeChamber = () => {
       $('astroChamberModal').classList.remove('open');
+      $('chLoupeStage').classList.remove('active');
+      $('chLoupeLens').style.display = 'none';
       if (state.astroRenderer) state.astroRenderer.stop();
     };
     $('btnCloseChamber').addEventListener('click', closeChamber);
@@ -1008,9 +1164,67 @@
     });
     $('chBands').addEventListener('click', (ev) => {
       const btn = ev.target.closest('button[data-band]');
-      if (!btn || !state.astroRenderer) return;
-      state.astroRenderer.band = Number(btn.dataset.band);
-      document.querySelectorAll('#chBands button').forEach((b) => b.classList.toggle('active', b === btn));
+      if (!btn) return;
+      setChamberBandMode(btn.dataset.band);
+    });
+
+    // Interactive 2x-15x Optical Loupe Lens for Clarified Observatory Plates
+    let lastLoupeEvt = null;
+    const updateLoupeLens = (ev) => {
+      if (ev) lastLoupeEvt = ev;
+      const e = lastLoupeEvt;
+      const stage = $('chLoupeStage');
+      const img = $('chArchiveImg');
+      const lens = $('chLoupeLens');
+      if (!e || !stage.classList.contains('active') || !img.getAttribute('src')) {
+        lens.style.display = 'none';
+        return;
+      }
+      const sRect = stage.getBoundingClientRect();
+      const iRect = img.getBoundingClientRect();
+      if (
+        e.clientX < iRect.left || e.clientX > iRect.right ||
+        e.clientY < iRect.top || e.clientY > iRect.bottom ||
+        iRect.width < 10 || iRect.height < 10
+      ) {
+        lens.style.display = 'none';
+        return;
+      }
+      const zoom = state.loupeZoom;
+      const lensW = 176;
+      const lensH = 176;
+      const relX = e.clientX - iRect.left;
+      const relY = e.clientY - iRect.top;
+      const stageX = e.clientX - sRect.left;
+      const stageY = e.clientY - sRect.top;
+
+      lens.style.display = 'block';
+      lens.style.left = `${(stageX - lensW * 0.5).toFixed(1)}px`;
+      lens.style.top = `${(stageY - lensH * 0.5).toFixed(1)}px`;
+      lens.style.backgroundImage = `url("${img.src}")`;
+      lens.style.backgroundSize = `${(iRect.width * zoom).toFixed(1)}px ${(iRect.height * zoom).toFixed(1)}px`;
+      lens.style.backgroundPosition = `${(-(relX * zoom - lensW * 0.5)).toFixed(1)}px ${(-(relY * zoom - lensH * 0.5)).toFixed(1)}px`;
+      $('chLoupeTag').textContent = `${zoom.toFixed(1)}x LOUPE`;
+    };
+
+    $('chLoupeStage').addEventListener('mousemove', updateLoupeLens);
+    $('chLoupeStage').addEventListener('mouseleave', () => {
+      $('chLoupeLens').style.display = 'none';
+    });
+    $('chLoupeStage').addEventListener('wheel', (ev) => {
+      if (!$('chLoupeStage').classList.contains('active')) return;
+      ev.preventDefault();
+      const delta = ev.deltaY < 0 ? 0.5 : -0.5;
+      state.loupeZoom = Math.max(2.0, Math.min(15.0, state.loupeZoom + delta));
+      $('rngLoupe').value = state.loupeZoom.toFixed(1);
+      $('lblLoupeZoom').innerHTML = `${state.loupeZoom.toFixed(1)}&times;`;
+      updateLoupeLens(ev);
+    }, { passive: false });
+    $('rngLoupe').addEventListener('input', () => {
+      state.loupeZoom = Math.max(2.0, Math.min(15.0, Number($('rngLoupe').value) || 4.0));
+      $('lblLoupeZoom').innerHTML = `${state.loupeZoom.toFixed(1)}&times;`;
+      $('chLoupeTag').textContent = `${state.loupeZoom.toFixed(1)}x LOUPE`;
+      updateLoupeLens();
     });
 
     // Bottom Dock Toggles

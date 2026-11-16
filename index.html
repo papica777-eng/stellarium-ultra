@@ -388,13 +388,23 @@
           <button type="button" data-band="1">H&alpha; / [O III]</button>
           <button type="button" data-band="2">Infrared 2MASS</button>
           <button type="button" data-band="3">UV / Plasma</button>
+          <button type="button" data-band="archive" id="btnBandArchive" style="display:none;border-color:rgba(246,201,94,0.45);color:#fef08a;">&#128269; 4K SGL Plate + Loupe</button>
         </div>
         <button type="button" class="btn-close-x" id="btnCloseChamber">&times;</button>
       </div>
 
       <div class="ch-viewport-wrap">
         <canvas id="astroChamberCanvas"></canvas>
-        <div class="ch-overlay-hint">Drag to inspect 3D geometry &bull; Scroll to magnify &bull; Illumination locked to ERFA solar phase</div>
+        <div class="ch-loupe-stage" id="chLoupeStage">
+          <img id="chArchiveImg" src="" alt="Archival Clarified Observation Plate" />
+          <div class="ch-loupe-lens" id="chLoupeLens"><span class="loupe-tag" id="chLoupeTag">4.0x LOUPE</span></div>
+          <div class="ch-loupe-ctrl">
+            <span>Loupe</span>
+            <input id="rngLoupe" type="range" min="2" max="15" step="0.5" value="4.0" />
+            <b id="lblLoupeZoom">4.0&times;</b>
+          </div>
+        </div>
+        <div class="ch-overlay-hint" id="chOverlayHint">Drag to inspect 3D geometry &bull; Scroll to magnify &bull; Illumination locked to ERFA solar phase</div>
       </div>
 
       <div class="ch-telemetry" id="chTelemetry"></div>
