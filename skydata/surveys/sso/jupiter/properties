@@ -1,0 +1,10 @@
+hips_order            = 1
+hips_order_min        = 0
+hips_tile_width       = 256
+hips_tile_format      = jpeg
+dataproduct_type      = image
+obs_title             = jupiter
+hips_release_date     = 2026-11-16T00:00Z
+type                  = planet
+hips_frame            = jupiter
+hips_status           = public

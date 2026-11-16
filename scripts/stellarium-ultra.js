@@ -260,7 +260,16 @@
         c.dss.addDataSource({ url: 'https://skies.esac.esa.int/DSSColor' });
         c.minor_planets.addDataSource({ url: `${baseUrl}skydata/mpcorb.dat`, key: 'mpc_asteroids' });
         c.planets.addDataSource({ url: `${baseUrl}skydata/surveys/sso/moon`, key: 'moon' });
+        c.planets.addDataSource({ url: `${baseUrl}skydata/surveys/sso/moon-normal`, key: 'moon-normal' });
         c.planets.addDataSource({ url: `${baseUrl}skydata/surveys/sso/sun`, key: 'sun' });
+        c.planets.addDataSource({ url: `${baseUrl}skydata/surveys/sso/mercury`, key: 'mercury' });
+        c.planets.addDataSource({ url: `${baseUrl}skydata/surveys/sso/venus`, key: 'venus' });
+        c.planets.addDataSource({ url: `${baseUrl}skydata/surveys/sso/earth`, key: 'earth' });
+        c.planets.addDataSource({ url: `${baseUrl}skydata/surveys/sso/mars`, key: 'mars' });
+        c.planets.addDataSource({ url: `${baseUrl}skydata/surveys/sso/jupiter`, key: 'jupiter' });
+        c.planets.addDataSource({ url: `${baseUrl}skydata/surveys/sso/saturn`, key: 'saturn' });
+        c.planets.addDataSource({ url: `${baseUrl}skydata/surveys/sso/uranus`, key: 'uranus' });
+        c.planets.addDataSource({ url: `${baseUrl}skydata/surveys/sso/neptune`, key: 'neptune' });
         c.planets.addDataSource({ url: `${baseUrl}skydata/surveys/sso/moon`, key: 'default' });
         c.comets.addDataSource({ url: `${baseUrl}skydata/CometEls.txt`, key: 'mpc_comets' });
         c.satellites.addDataSource({ url: `${baseUrl}skydata/tle_satellite.jsonl.gz`, key: 'jsonl/sat' });
