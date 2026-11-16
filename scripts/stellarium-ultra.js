@@ -68,9 +68,11 @@
     { query: 'Cas A', raDecDeg: [350.85, 58.815], name: 'Cassiopeia A (JWST MIRI)', sub: 'Clarified Supernova Remnant · 11,000 LY', kind: 'Supernova Remnant', icon: 'nebula_default.svg', fov: 0.9, plateImg: './symbols/plates/cassiopeia_a_clarified.jpg', preferArchive: true, sglInfo: { dist: '11,000 LY', scale: '10 LY Shell', instrument: 'JWST MIRI', type: 'Supernova Remnant' } },
     { query: 'SMACS J0723', raDecDeg: [110.83, -73.45], name: 'JWST SMACS 0723 Deep Field', sub: 'Gravitational Lens Galaxy Cluster · 4.6B LY', kind: 'Galaxy Cluster', icon: 'group_of_galaxies.svg', fov: 0.45, plateImg: './symbols/plates/jwst_smacs0723_clarified.jpg', preferArchive: true, sglInfo: { dist: '4.6 Billion LY', scale: 'Gravitational Lens', instrument: 'JWST NIRCam', type: 'Galaxy Cluster' } },
     { query: 'HUDF', raDecDeg: [53.16, -27.79], name: 'Hubble Ultra Deep Field', sub: 'Clarified 10,000-Galaxy Deep Field · 13.2B LY', kind: 'Deep Field', icon: 'group_of_galaxies.svg', fov: 0.45, plateImg: './symbols/plates/hubble_deep_field_clarified.jpg', preferArchive: true, sglInfo: { dist: '13.2 Billion LY', scale: '10,000+ Galaxies', instrument: 'Hubble ACS/WFC3', type: 'Cosmological Deep Field' } },
-    { query: 'TRAPPIST-1', raDecDeg: [346.62, -5.04], name: 'TRAPPIST-1e (SGL 550 AU)', sub: 'Temperate Rocky Exoplanet · 39.46 LY (Aquarius)', kind: 'Exoplanet', icon: 'planet.svg', fov: 0.6, plateImg: './symbols/plates/trappist_1e.jpg', preferArchive: true, sglInfo: { dist: '39.46 LY', scale: '0.92 R_Earth · 5.65 g/cm³', instrument: 'Solar Gravitational Lens (550 AU)', type: 'Habitable Exoplanet' } },
-    { query: 'Kepler-1649', raDecDeg: [297.50, 41.75], name: 'Kepler-1649c (SGL 550 AU)', sub: 'Earth-Sized Habitable Zone World · 301 LY', kind: 'Exoplanet', icon: 'planet.svg', fov: 0.6, plateImg: './symbols/plates/kepler_1649c.jpg', preferArchive: true, sglInfo: { dist: '301.0 LY', scale: '1.06 R_Earth · 75% Solar Flux', instrument: 'Solar Gravitational Lens (550 AU)', type: 'Habitable Exoplanet' } },
-    { query: 'Kepler-186', raDecDeg: [298.65, 43.96], name: 'Kepler-186f (SGL 550 AU)', sub: 'First Earth-Size Habitable Exoplanet · 582 LY', kind: 'Exoplanet', icon: 'planet.svg', fov: 0.6, plateImg: './symbols/plates/kepler_186f.jpg', preferArchive: true, sglInfo: { dist: '582 LY', scale: '1.17 R_Earth', instrument: 'Solar Gravitational Lens (550 AU)', type: 'Habitable Exoplanet' } },
+    { query: 'TRAPPIST-1', raDecDeg: [346.62, -5.04], name: 'TRAPPIST-1 (M8V + 7 Worlds · SGL)', sub: '2,566 K Ultra-Cool Dwarf + 7 Keplerian Planets · 39.46 LY', kind: 'Exoplanet System', icon: 'planet.svg', fov: 0.35, plateImg: './symbols/plates/trappist_1e.jpg', preferArchive: false, sglInfo: { dist: '39.46 LY', scale: 'TRAPPIST-1e: 0.92 R_Earth · 5.65 g/cm³', instrument: 'ERFA + Rust Kepler Solver + SGL 550 AU', type: 'Habitable Exoplanet System' } },
+    { query: 'Kepler-1649', raDecDeg: [297.50, 41.75], name: 'Kepler-1649 (M5V + c · SGL 550 AU)', sub: 'Earth-Sized Habitable Zone World · 301 LY', kind: 'Exoplanet System', icon: 'planet.svg', fov: 0.35, plateImg: './symbols/plates/kepler_1649c.jpg', preferArchive: false, sglInfo: { dist: '301.0 LY', scale: 'Kepler-1649c: 1.06 R_Earth · 75% Flux', instrument: 'ERFA + Rust Kepler Solver + SGL 550 AU', type: 'Habitable Exoplanet System' } },
+    { query: 'Kepler-186', raDecDeg: [298.65, 43.96], name: 'Kepler-186 (M1V + 5 Planets · SGL)', sub: 'First Earth-Size Habitable Exoplanet · 582 LY', kind: 'Exoplanet System', icon: 'planet.svg', fov: 0.35, plateImg: './symbols/plates/kepler_186f.jpg', preferArchive: false, sglInfo: { dist: '582 LY', scale: 'Kepler-186f: 1.17 R_Earth', instrument: 'ERFA + Rust Kepler Solver + SGL 550 AU', type: 'Habitable Exoplanet System' } },
+    { query: 'Proxima Centauri', raDecDeg: [217.43, -62.68], name: 'Proxima Centauri (M5.5Ve + b/d)', sub: '3,042 K Flare Red Dwarf + 2 Planets · 4.24 LY', kind: 'Exoplanet System', icon: 'star.svg', fov: 0.35 },
+    { query: "Barnard's Star", raDecDeg: [269.45, 4.69], name: "Barnard's Star (M4V + b)", sub: 'Fastest Proper Motion Star · 5.96 LY (Ophiuchus)', kind: 'Exoplanet System', icon: 'star.svg', fov: 0.35 },
     { query: 'NAME Earth', raDecDeg: [180.0, 0.0], name: 'Planet Earth (DSCOVR EPIC)', sub: 'Sun-Earth L1 Lagrange Blue Marble · 1.5M km', kind: 'Biosphere', icon: 'planet.svg', fov: 6.0, plateImg: './symbols/plates/epic_earth.jpg', preferArchive: true, sglInfo: { dist: '1.5M km (L1)', scale: '1.00 R_Earth · 12,742 km', instrument: 'DSCOVR EPIC', type: 'Reference Biosphere' } }
   ];
 
@@ -126,6 +128,8 @@
     calendarEvents: [],
     skyCultureKey: 'western',
     hdrPostFx: null,
+    starfield1to1: null,
+    mathStarsShowcase: false,
     astroRenderer: null,
     pendingCatalogObj: null,
     pendingCatalogTs: 0,
@@ -262,17 +266,25 @@
       return;
     }
 
+    if (typeof window.AeternaStarfield1to1 === 'function') {
+      state.starfield1to1 = new window.AeternaStarfield1to1(canvas, `${baseUrl}engine/exodus_astrophysics_engine.wasm`);
+    }
+
     if (typeof window.AeternaHdrPostFx === 'function') {
       state.hdrPostFx = new window.AeternaHdrPostFx(canvas, $('fx-canvas'));
       state.hdrPostFx.bloomStrength = 0.38;
       state.hdrPostFx.diffractionStrength = 0.55;
+      if (state.starfield1to1) {
+        state.hdrPostFx.starsCanvas = state.starfield1to1.canvas;
+      }
     }
 
     window.StelWebEngine({
       wasmFile: `${baseUrl}engine/stellarium-web-engine.wasm`,
       canvas: canvas,
       preserveDrawingBuffer: true,
-      onPostRender: () => {
+      onPostRender: (cssW, cssH, dpr) => {
+        if (state.starfield1to1 && state.stel) state.starfield1to1.render(state.stel, cssW, cssH, dpr);
         if (state.hdrPostFx) state.hdrPostFx.render();
       },
       translateFn: (_domain, str) => str,
@@ -280,6 +292,10 @@
         state.stel = stel;
         state.core = stel.core;
         const c = stel.core;
+
+        if (state.starfield1to1) {
+          state.starfield1to1.registerDeepHosts(stel);
+        }
 
         statusEl.textContent = 'Streaming Stars, Milky Way, Palomar DSS2 & JWST Plates...';
 
@@ -899,6 +915,7 @@
     $('btnEqGrid').classList.toggle('active', !!c.lines.equatorial.visible);
     $('btnDso').classList.toggle('active', !!c.dsos.visible);
     $('btnMilkyWay').classList.toggle('active', !!c.milkyway.visible);
+    $('btnMathStars').classList.toggle('active', state.mathStarsShowcase);
     $('btnNightMode').classList.toggle('active', state.nightMode);
   }
 
@@ -1249,6 +1266,14 @@
     bindToggle('btnDso', (c) => c.dsos.visible, (c, v) => { c.dsos.visible = v; });
     bindToggle('btnMilkyWay', (c) => c.milkyway.visible, (c, v) => { c.milkyway.visible = v; });
 
+    $('btnMathStars').addEventListener('click', () => {
+      state.mathStarsShowcase = !state.mathStarsShowcase;
+      if (state.starfield1to1) {
+        state.starfield1to1.setShowcaseBoost(state.mathStarsShowcase ? 2.8 : 1.0);
+      }
+      syncBottomDock();
+    });
+
     $('btnNightMode').addEventListener('click', () => {
       state.nightMode = !state.nightMode;
       document.documentElement.dataset.night = state.nightMode ? 'true' : 'false';
@@ -1257,7 +1282,7 @@
     });
 
     $('btnZoomIn').addEventListener('click', () => {
-      if (state.stel) state.stel.zoomTo(Math.max(0.05 * D2R, state.core.fov * 0.62), 0.35);
+      if (state.stel) state.stel.zoomTo(Math.max(0.015 * D2R, state.core.fov * 0.62), 0.35);
     });
     $('btnZoomOut').addEventListener('click', () => {
       if (state.stel) state.stel.zoomTo(Math.min(150 * D2R, state.core.fov * 1.45), 0.35);

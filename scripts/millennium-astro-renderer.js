@@ -526,6 +526,13 @@
     polaris: { kind: 0, bv: 0.60, oblate: 0.01, corona: 1.0, label: 'F7Ib Cepheid Supergiant (~6,015 K)' },
     deneb: { kind: 0, bv: 0.09, oblate: 0.03, corona: 1.35, label: 'A2Ia Luminous Supergiant (~8,525 K)' },
     fomalhaut: { kind: 0, bv: 0.09, oblate: 0.04, corona: 0.95, label: 'A3V Southern Star (~8,590 K)' },
+    trappist1: { kind: 0, bv: 1.90, oblate: 0.03, corona: 1.75, label: 'M8V Ultra-Cool Red Dwarf (2,566 K · 7 Exoplanets)' },
+    trappist1e: { kind: 0, bv: 1.90, oblate: 0.03, corona: 1.75, label: 'M8V Host TRAPPIST-1 + TRAPPIST-1e Habitable World' },
+    proximacentauri: { kind: 0, bv: 1.81, oblate: 0.03, corona: 1.68, label: 'M5.5Ve Flare Red Dwarf (3,042 K · Nearest Star)' },
+    kepler1649: { kind: 0, bv: 1.62, oblate: 0.02, corona: 1.45, label: 'M5V Habitable Host Star (~3,240 K)' },
+    kepler186: { kind: 0, bv: 1.48, oblate: 0.02, corona: 1.38, label: 'M1V Five-Planet System (~3,755 K)' },
+    barnardsstar: { kind: 0, bv: 1.73, oblate: 0.02, corona: 1.55, label: 'M4V High Proper Motion Dwarf (5.96 LY)' },
+    wolf359: { kind: 0, bv: 2.01, oblate: 0.03, corona: 1.70, label: 'M6V Flare Dwarf (7.86 LY)' },
 
     // Galaxies, Nebulae & Globular Clusters
     m31: { kind: 2, sersicN: 2.2, incDeg: 77, spiral: 4.1, label: 'SA(s)b Andromeda Spiral Galaxy (77° Tilt)' },

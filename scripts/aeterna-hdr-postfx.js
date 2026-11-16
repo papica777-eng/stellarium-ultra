@@ -25,12 +25,23 @@
     in vec2 vUv;
     out vec4 fragColor;
     uniform sampler2D uSrc;
+    uniform sampler2D uStarsSrc;
+    uniform float uHasStars;
     uniform vec2 uTexel;
     uniform float uThreshold;
     uniform float uDiffraction;
 
+    vec3 sampleScene(vec2 uv) {
+      vec3 c = texture(uSrc, uv).rgb;
+      if (uHasStars > 0.5) {
+        vec4 s = texture(uStarsSrc, uv);
+        c = c * (1.0 - s.a) + s.rgb;
+      }
+      return c;
+    }
+
     void main() {
-      vec3 c = texture(uSrc, vUv).rgb;
+      vec3 c = sampleScene(vUv);
       float lum = dot(c, vec3(0.2126, 0.7152, 0.0722));
       float soft = max(lum - uThreshold, 0.0);
       vec3 bloom = (lum > 1e-4) ? c * (soft / lum) * 1.45 : vec3(0.0);
@@ -43,10 +54,10 @@
           float w = (1.0 - float(i) / 6.2) * 0.24;
           vec2 d1 = vec2(stepR, stepR) * uTexel;
           vec2 d2 = vec2(stepR, -stepR) * uTexel;
-          vec3 s1 = texture(uSrc, vUv + d1).rgb;
-          vec3 s2 = texture(uSrc, vUv - d1).rgb;
-          vec3 s3 = texture(uSrc, vUv + d2).rgb;
-          vec3 s4 = texture(uSrc, vUv - d2).rgb;
+          vec3 s1 = sampleScene(vUv + d1);
+          vec3 s2 = sampleScene(vUv - d1);
+          vec3 s3 = sampleScene(vUv + d2);
+          vec3 s4 = sampleScene(vUv - d2);
           float t1 = smoothstep(0.76, 1.0, dot(s1, vec3(0.299, 0.587, 0.114)));
           float t2 = smoothstep(0.76, 1.0, dot(s2, vec3(0.299, 0.587, 0.114)));
           float t3 = smoothstep(0.76, 1.0, dot(s3, vec3(0.299, 0.587, 0.114)));
@@ -113,6 +124,7 @@
     constructor(srcCanvas, fxCanvas) {
       this.srcCanvas = srcCanvas;
       this.fxCanvas = fxCanvas;
+      this.starsCanvas = null;
       this.enabled = true;
       this.bloomStrength = 0.42;
       this.threshold = 0.56;
@@ -195,6 +207,8 @@
 
         this.uExtract = {
           uSrc: gl.getUniformLocation(this.pExtract, 'uSrc'),
+          uStarsSrc: gl.getUniformLocation(this.pExtract, 'uStarsSrc'),
+          uHasStars: gl.getUniformLocation(this.pExtract, 'uHasStars'),
           uTexel: gl.getUniformLocation(this.pExtract, 'uTexel'),
           uThreshold: gl.getUniformLocation(this.pExtract, 'uThreshold'),
           uDiffraction: gl.getUniformLocation(this.pExtract, 'uDiffraction')
@@ -219,6 +233,13 @@
 
         this.srcTex = gl.createTexture();
         gl.bindTexture(gl.TEXTURE_2D, this.srcTex);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+        this.starsTex = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, this.starsTex);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
@@ -281,16 +302,25 @@
 
       gl.bindVertexArray(this.vao);
 
-      // Upload latest Stellarium WebGL2 backbuffer directly on GPU
+      // Upload latest Stellarium WebGL2 backbuffer + 1:1 Starfield canvas on GPU
       gl.activeTexture(gl.TEXTURE0);
       gl.bindTexture(gl.TEXTURE_2D, this.srcTex);
       gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, this.srcCanvas);
+
+      const hasStars = !!(this.starsCanvas && this.starsCanvas.width > 0 && this.starsCanvas.style.display !== 'none');
+      if (hasStars) {
+        gl.activeTexture(gl.TEXTURE1);
+        gl.bindTexture(gl.TEXTURE_2D, this.starsTex);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, this.starsCanvas);
+      }
 
       // Pass 1: Extract HDR highlights + diffraction spider spikes -> halfA
       gl.bindFramebuffer(gl.FRAMEBUFFER, halfA.fbo);
       gl.viewport(0, 0, halfA.w, halfA.h);
       gl.useProgram(this.pExtract);
       gl.uniform1i(this.uExtract.uSrc, 0);
+      gl.uniform1i(this.uExtract.uStarsSrc, 1);
+      gl.uniform1f(this.uExtract.uHasStars, hasStars ? 1.0 : 0.0);
       gl.uniform2f(this.uExtract.uTexel, 1 / this.w, 1 / this.h);
       gl.uniform1f(this.uExtract.uThreshold, this.threshold);
       gl.uniform1f(this.uExtract.uDiffraction, this.diffractionStrength);
@@ -298,6 +328,7 @@
 
       // Pass 2: Tight Separable Gaussian Blur H -> halfB, V -> halfA
       gl.useProgram(this.pBlur);
+      gl.activeTexture(gl.TEXTURE0);
       gl.bindFramebuffer(gl.FRAMEBUFFER, halfB.fbo);
       gl.viewport(0, 0, halfB.w, halfB.h);
       gl.bindTexture(gl.TEXTURE_2D, halfA.tex);
@@ -344,6 +375,9 @@
       out.height = h;
       const ctx = out.getContext('2d');
       ctx.drawImage(this.srcCanvas, 0, 0, w, h);
+      if (this.starsCanvas && this.starsCanvas.width > 0 && this.starsCanvas.style.display !== 'none') {
+        ctx.drawImage(this.starsCanvas, 0, 0, w, h);
+      }
       if (this.ok && this.enabled && this.bloomStrength > 0.01) {
         ctx.save();
         ctx.globalCompositeOperation = 'screen';
