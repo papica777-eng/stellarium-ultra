@@ -13,8 +13,9 @@
   <link rel="stylesheet" href="./styles/stellarium-ultra.css" />
 </head>
 <body>
-  <!-- NATIVE STELLARIUM C/C++/ERFA/WebGL2 WASM CANVAS -->
+  <!-- NATIVE STELLARIUM C/C++/ERFA/WebGL2 WASM CANVAS + MILLENNIUM HDR OPTICAL POST-FX -->
   <canvas id="stel-canvas" aria-label="Stellarium Interactive Celestial Sphere"></canvas>
+  <canvas id="fx-canvas" aria-hidden="true"></canvas>
   <div id="nightModeOverlay" aria-hidden="true"></div>
   <div id="eyepieceMask" aria-hidden="true"></div>
 
@@ -64,6 +65,9 @@
         <span id="hudCoords">FOV <b>72.0&deg;</b> &bull; AZ <b>165.0&deg;</b> &bull; ALT <b>+24.0&deg;</b></span>
         <span class="fps-badge" id="hudFpsBadge">60 FPS</span>
       </div>
+      <button type="button" class="btn-settings-top capture" id="btnCapturePng" title="Capture HDR Composite Astrophotography PNG">
+        &#128247; Capture
+      </button>
       <button type="button" class="btn-settings-top" id="btnOpenSettings" title="View Settings &amp; Astrophotography Tuners">
         &#9881; View Settings
       </button>
@@ -290,8 +294,16 @@
 
       <div class="settings-grid">
         <div class="sg-box">
-          <label><span>Exposure Gain</span><b id="lblExposure">1.10&times;</b></label>
-          <input id="rngExposure" type="range" min="0.3" max="4.0" step="0.05" value="1.1" />
+          <label><span>HDR Optical Bloom (WebGL2)</span><b id="lblHdrBloom">38%</b></label>
+          <input id="rngHdrBloom" type="range" min="0" max="1" step="0.02" value="0.38" />
+        </div>
+        <div class="sg-box">
+          <label><span>Star Diffraction Spikes</span><b id="lblDiffraction">55%</b></label>
+          <input id="rngDiffraction" type="range" min="0" max="1.2" step="0.05" value="0.55" />
+        </div>
+        <div class="sg-box">
+          <label><span>Exposure Gain</span><b id="lblExposure">1.15&times;</b></label>
+          <input id="rngExposure" type="range" min="0.3" max="4.0" step="0.05" value="1.15" />
         </div>
         <div class="sg-box">
           <label><span>Bortle Light Pollution</span><b id="lblBortle">Class 2</b></label>
@@ -300,6 +312,18 @@
         <div class="sg-box">
           <label><span>Star Relative Scale</span><b id="lblStarScale">1.10&times;</b></label>
           <input id="rngStarScale" type="range" min="0.5" max="2.4" step="0.05" value="1.1" />
+        </div>
+        <div class="sg-box">
+          <label><span>Meteor Showers (ZHR)</span><b id="lblMeteorsZhr">65/hr</b></label>
+          <input id="rngMeteorsZhr" type="range" min="0" max="500" step="5" value="65" />
+        </div>
+        <div class="sg-box">
+          <label><span>Deep-Sky Zoom Survey</span></label>
+          <select id="selDssSurvey">
+            <option value="https://skies.esac.esa.int/DSSColor" selected>Palomar Optical DSS2 Color (Order 9)</option>
+            <option value="https://skies.esac.esa.int/2MASSColor">2MASS Infrared Galactic Survey</option>
+            <option value="off">Off (Vector Stars Only)</option>
+          </select>
         </div>
         <div class="sg-box">
           <label><span>Sky Culture Mythology</span></label>
@@ -348,9 +372,10 @@
     </div>
   </div>
 
-  <!-- RUNTIME SCRIPTS (NO SPINNING SPHERES — 100% STELLARIUM WASM) -->
+  <!-- RUNTIME SCRIPTS (STELLARIUM WASM + MILLENNIUM HDR POST-FX) -->
   <script src="./engine/stellarium-web-engine.js"></script>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
+  <script src="./scripts/aeterna-hdr-postfx.js" defer></script>
   <script src="./scripts/stellarium-ultra.js" defer></script>
 </body>
 </html>

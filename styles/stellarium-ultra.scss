@@ -36,6 +36,17 @@ html, body {
   }
 }
 
+#fx-canvas {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  z-index: $z-canvas + 1;
+  pointer-events: none;
+  mix-blend-mode: screen;
+}
+
 #nightModeOverlay {
   position: fixed;
   inset: 0;
@@ -475,6 +486,12 @@ html, body {
       border-color: var(--su-accent);
       color: var(--su-accent-2);
       background: rgba(83, 184, 234, 0.16);
+    }
+
+    &.capture:hover {
+      border-color: var(--su-gold);
+      color: var(--su-gold);
+      background: rgba(246, 201, 94, 0.14);
     }
   }
 }

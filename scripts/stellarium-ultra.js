@@ -63,7 +63,8 @@
     { query: 'M1', name: 'Crab Nebula (M1)', sub: '1054 AD Supernova Remnant in Taurus', kind: 'SNR', icon: 'bright_emission_nebula.svg', fov: 2 },
     { query: 'M16', name: 'Eagle Nebula (M16)', sub: 'Home of the Pillars of Creation', kind: 'Nebula', icon: 'bright_emission_nebula.svg', fov: 3 },
     { query: 'M20', name: 'Trifid Nebula (M20)', sub: 'Emission + Reflection Nebula in Sagittarius', kind: 'Nebula', icon: 'bright_emission_nebula.svg', fov: 3 },
-    { query: 'NGC 869', name: 'Double Cluster (NGC 869)', sub: 'Twin Open Clusters in Perseus', kind: 'Open Cluster', icon: 'open_galactic_cluster.svg', fov: 4 }
+    { query: 'NGC 869', name: 'Double Cluster (NGC 869)', sub: 'Twin Open Clusters in Perseus', kind: 'Open Cluster', icon: 'open_galactic_cluster.svg', fov: 4 },
+    { query: 'NGC 3372', raDecDeg: [159.23, -58.62], name: 'Carina Cliffs (JWST Plate)', sub: 'Calibrated Webb Deep-Space Mosaic', kind: 'JWST Plate', icon: 'bright_emission_nebula.svg', fov: 1.8 }
   ];
 
   const VIS_PLANETS = [
@@ -92,6 +93,7 @@
     calendarLoaded: false,
     calendarEvents: [],
     skyCultureKey: 'western',
+    hdrPostFx: null,
     leafletMap: null,
     leafletMarker: null,
     timeRepeatTimer: null
@@ -223,27 +225,38 @@
       return;
     }
 
+    if (typeof window.AeternaHdrPostFx === 'function') {
+      state.hdrPostFx = new window.AeternaHdrPostFx(canvas, $('fx-canvas'));
+      state.hdrPostFx.bloomStrength = 0.38;
+      state.hdrPostFx.diffractionStrength = 0.55;
+    }
+
     window.StelWebEngine({
       wasmFile: `${baseUrl}engine/stellarium-web-engine.wasm`,
       canvas: canvas,
+      preserveDrawingBuffer: true,
+      onPostRender: () => {
+        if (state.hdrPostFx) state.hdrPostFx.render();
+      },
       translateFn: (_domain, str) => str,
       onReady: (stel) => {
         state.stel = stel;
         state.core = stel.core;
         const c = stel.core;
 
-        statusEl.textContent = 'Streaming Stars, Milky Way & Deep Sky Catalogs...';
+        statusEl.textContent = 'Streaming Stars, Milky Way, Palomar DSS2 & JWST Plates...';
 
         // Official NanoVG Vector Fonts
         stel.setFont('regular', `${baseUrl}fonts/Roboto-Regular.ttf`, 1.38);
         stel.setFont('bold', `${baseUrl}fonts/Roboto-Bold.ttf`, 1.38);
 
-        // Attach All Self-Hosted Sky Data Sources
+        // Attach All Self-Hosted + Open CORS Deep-Sky HiPS Catalogs
         c.stars.addDataSource({ url: `${baseUrl}skydata/stars` });
         c.skycultures.addDataSource({ url: `${baseUrl}skydata/skycultures/western`, key: 'western' });
         c.dsos.addDataSource({ url: `${baseUrl}skydata/dso` });
         c.landscapes.addDataSource({ url: `${baseUrl}skydata/landscapes/guereins`, key: 'guereins' });
         c.milkyway.addDataSource({ url: `${baseUrl}skydata/surveys/milkyway` });
+        c.dss.addDataSource({ url: 'https://skies.esac.esa.int/DSSColor' });
         c.minor_planets.addDataSource({ url: `${baseUrl}skydata/mpcorb.dat`, key: 'mpc_asteroids' });
         c.planets.addDataSource({ url: `${baseUrl}skydata/surveys/sso/moon`, key: 'moon' });
         c.planets.addDataSource({ url: `${baseUrl}skydata/surveys/sso/sun`, key: 'sun' });
@@ -251,12 +264,29 @@
         c.comets.addDataSource({ url: `${baseUrl}skydata/CometEls.txt`, key: 'mpc_comets' });
         c.satellites.addDataSource({ url: `${baseUrl}skydata/tle_satellite.jsonl.gz`, key: 'jsonl/sat' });
 
-        // Clean Native Stellarium Visual Defaults (Zero noisy grids on start!)
+        // Calibrated Deep-Space JWST Plate Layer (Carina Cliffs NGC 3324 in ICRF)
+        try {
+          const jwstLayer = stel.createLayer({ id: 'jwst-plates', z: 5, visible: true });
+          const photo = jwstLayer.add('photo', {
+            url: `${baseUrl}symbols/jwst_carina.webp`,
+            calibration: { ra: 159.23, dec: -58.62, pixscale: 1.6, orientation: 18 },
+            render_shape: false,
+            visible: true
+          });
+          if (photo) photo.visible = true;
+        } catch (_) {}
+
+        // Authentic Observatory Sky Visuals + Active Meteors + Deep-Sky Survey
         c.atmosphere.visible = true;
         c.landscapes.visible = true;
         c.milkyway.visible = true;
+        c.dss.visible = true;
         c.dsos.visible = true;
         c.satellites.visible = true;
+        if (c.meteors) {
+          c.meteors.visible = true;
+          c.meteors.zhr = 65;
+        }
         c.planets.hints_visible = true;
         c.constellations.lines_visible = true;
         c.constellations.labels_visible = true;
@@ -267,7 +297,7 @@
         c.lines.meridian.visible = false;
 
         c.bortle_index = 2;
-        c.exposure_scale = 1.1;
+        c.exposure_scale = 1.15;
         c.star_relative_scale = 1.1;
         c.time_speed = 1.0;
         c.fov = 72 * D2R;
@@ -528,7 +558,7 @@
   function renderWondersTab() {
     const host = $('wondersListHost');
     host.innerHTML = '';
-    SKY_CATALOG.filter((c) => ['Galaxy', 'Nebula', 'Open Cluster', 'Globular', 'Planetary', 'SNR', 'Moon', 'Planet'].includes(c.kind)).forEach((item) => {
+    SKY_CATALOG.filter((c) => ['Galaxy', 'Nebula', 'Open Cluster', 'Globular', 'Planetary', 'SNR', 'Moon', 'Planet', 'JWST Plate'].includes(c.kind)).forEach((item) => {
       const card = document.createElement('div');
       card.className = 'wonder-card';
       card.innerHTML = `
@@ -539,17 +569,23 @@
         </div>
         <span class="wc-fov">${item.fov}°</span>
       `;
-      card.addEventListener('click', () => {
-        if (!state.stel) return;
-        const obj = state.stel.getObj(item.query);
-        if (obj) {
-          state.stel.core.selection = obj;
-          state.stel.pointAndLock(obj, 0.95);
-          state.stel.zoomTo(item.fov * D2R, 0.95);
-        }
-      });
+      card.addEventListener('click', () => focusCatalogItem(item));
       host.appendChild(card);
     });
+  }
+
+  function focusCatalogItem(item) {
+    if (!state.stel) return;
+    const obj = state.stel.getObj(item.query);
+    if (obj) {
+      state.stel.core.selection = obj;
+      state.stel.pointAndLock(obj, 0.95);
+      state.stel.zoomTo(item.fov * D2R, 0.95);
+    } else if (item.raDecDeg) {
+      const icrf = state.stel.s2c(item.raDecDeg[0] * D2R, item.raDecDeg[1] * D2R);
+      state.stel.lookAt(icrf, 0.95);
+      state.stel.zoomTo(item.fov * D2R, 0.95);
+    }
   }
 
   // --------------------------------------------------------------------------
@@ -617,13 +653,7 @@
       row.addEventListener('click', () => {
         resEl.classList.remove('open');
         $('skySearchInput').value = item.name;
-        if (!state.stel) return;
-        const obj = state.stel.getObj(item.query);
-        if (obj) {
-          state.stel.core.selection = obj;
-          state.stel.pointAndLock(obj, 0.95);
-          state.stel.zoomTo(item.fov * D2R, 0.95);
-        }
+        focusCatalogItem(item);
       });
       resEl.appendChild(row);
     });
@@ -756,12 +786,22 @@
   function syncViewSettingsUI() {
     const c = state.core;
     if (!c) return;
+    if (state.hdrPostFx) {
+      $('rngHdrBloom').value = state.hdrPostFx.bloomStrength;
+      $('lblHdrBloom').textContent = `${Math.round(state.hdrPostFx.bloomStrength * 100)}%`;
+      $('rngDiffraction').value = state.hdrPostFx.diffractionStrength;
+      $('lblDiffraction').textContent = `${Math.round(state.hdrPostFx.diffractionStrength * 100)}%`;
+    }
     $('rngExposure').value = c.exposure_scale;
     $('lblExposure').textContent = `${Number(c.exposure_scale).toFixed(2)}×`;
     $('rngBortle').value = c.bortle_index;
     $('lblBortle').textContent = `Class ${Math.round(c.bortle_index)}`;
     $('rngStarScale').value = c.star_relative_scale;
     $('lblStarScale').textContent = `${Number(c.star_relative_scale).toFixed(2)}×`;
+    if (c.meteors) {
+      $('rngMeteorsZhr').value = c.meteors.zhr || 0;
+      $('lblMeteorsZhr').textContent = `${Math.round(c.meteors.zhr || 0)}/hr`;
+    }
 
     $('chkMilkyWay').checked = !!c.milkyway.visible;
     $('chkDsos').checked = !!c.dsos.visible;
@@ -964,7 +1004,12 @@
       }
     });
 
-    // View Settings Modal
+    // View Settings & Capture
+    $('btnCapturePng').addEventListener('click', () => {
+      if (state.hdrPostFx) {
+        state.hdrPostFx.captureCompositePNG();
+      }
+    });
     $('btnOpenSettings').addEventListener('click', () => {
       syncViewSettingsUI();
       $('settingsModal').classList.add('open');
@@ -974,6 +1019,30 @@
       if (e.target === $('settingsModal')) $('settingsModal').classList.remove('open');
     });
 
+    $('rngHdrBloom').addEventListener('input', (e) => {
+      if (state.hdrPostFx) { state.hdrPostFx.bloomStrength = Number(e.target.value); syncViewSettingsUI(); }
+    });
+    $('rngDiffraction').addEventListener('input', (e) => {
+      if (state.hdrPostFx) { state.hdrPostFx.diffractionStrength = Number(e.target.value); syncViewSettingsUI(); }
+    });
+    $('rngMeteorsZhr').addEventListener('input', (e) => {
+      if (state.core && state.core.meteors) {
+        const v = Number(e.target.value);
+        state.core.meteors.visible = v > 0;
+        state.core.meteors.zhr = v;
+        syncViewSettingsUI();
+      }
+    });
+    $('selDssSurvey').addEventListener('change', (e) => {
+      if (!state.core || !state.core.dss) return;
+      const val = e.target.value;
+      if (val === 'off') {
+        state.core.dss.visible = false;
+      } else {
+        state.core.dss.addDataSource({ url: val });
+        state.core.dss.visible = true;
+      }
+    });
     $('selSkyCulture').addEventListener('change', (e) => {
       const key = e.target.value;
       if (!state.stel) return;
