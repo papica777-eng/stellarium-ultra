@@ -160,6 +160,15 @@
       const fbo = gl.createFramebuffer();
       gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
       gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
+      if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) !== gl.FRAMEBUFFER_COMPLETE) {
+        // Fallback to guaranteed 8-bit FBO if half-float render target unsupported on driver
+        this.internalFmt = gl.RGBA8;
+        this.pixelType = gl.UNSIGNED_BYTE;
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, w, h, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+        if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) !== gl.FRAMEBUFFER_COMPLETE) {
+          throw new Error('Framebuffer incomplete');
+        }
+      }
       return { tex, fbo, w, h };
     }
 
@@ -256,16 +265,18 @@
       const gl = this.gl;
 
       if (!this.enabled || this.bloomStrength <= 0.01) {
-        if (this.w !== 0) {
-          gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-          gl.viewport(0, 0, this.fxCanvas.width, this.fxCanvas.height);
-          gl.clearColor(0, 0, 0, 0);
-          gl.clear(gl.COLOR_BUFFER_BIT);
-        }
+        this.fxCanvas.style.display = 'none';
         return;
       }
+      this.fxCanvas.style.display = 'block';
 
-      this.ensureTargets(this.srcCanvas.width, this.srcCanvas.height);
+      try {
+        this.ensureTargets(this.srcCanvas.width, this.srcCanvas.height);
+      } catch (_) {
+        this.ok = false;
+        this.fxCanvas.style.display = 'none';
+        return;
+      }
       const { halfA, halfB, qtrA, qtrB } = this.fbos;
 
       gl.bindVertexArray(this.vao);
