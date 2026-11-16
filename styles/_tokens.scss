@@ -1,0 +1,60 @@
+// =============================================================================
+// STELLARIUM ULTRA — SCSS DESIGN TOKENS & NIGHT VISION THEME
+// =============================================================================
+
+$bg-deep: #02040a;
+$bg-panel: rgba(11, 16, 29, 0.80);
+$bg-panel-solid: rgba(9, 13, 24, 0.94);
+$bg-card: rgba(255, 255, 255, 0.04);
+$bg-card-hover: rgba(255, 255, 255, 0.085);
+
+$accent-ice: #53b8ea;
+$accent-cyan: #7dd3fc;
+$accent-gold: #f6c95e;
+$accent-amber: #fbbf24;
+$accent-emerald: #34d399;
+
+$text-main: #f1f5f9;
+$text-soft: #cbd5e1;
+$text-dim: #7f92b0;
+
+$border-glass: rgba(148, 177, 219, 0.16);
+$border-active: rgba(83, 184, 234, 0.56);
+
+$font-display: 'Cinzel', Georgia, serif;
+$font-ui: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+$font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+$radius-xl: 16px;
+$radius-md: 11px;
+$radius-pill: 999px;
+
+$z-canvas: 1;
+$z-hud: 30;
+$z-popover: 50;
+$z-modal: 90;
+
+// Runtime CSS variables (supports instant Red Astronomer Night Vision switching)
+:root {
+  --su-accent: #{$accent-ice};
+  --su-accent-2: #{$accent-cyan};
+  --su-gold: #{$accent-gold};
+  --su-panel-bg: #{$bg-panel};
+  --su-panel-deep: #{$bg-panel-solid};
+  --su-border: #{$border-glass};
+  --su-text: #{$text-main};
+  --su-text-soft: #{$text-soft};
+  --su-text-dim: #{$text-dim};
+
+  &[data-night='true'] {
+    --su-accent: #ff4444;
+    --su-accent-2: #ff6b6b;
+    --su-gold: #ff5544;
+    --su-panel-bg: rgba(26, 4, 4, 0.86);
+    --su-panel-deep: rgba(22, 2, 2, 0.96);
+    --su-border: rgba(255, 68, 68, 0.28);
+    --su-text: #ffb4b4;
+    --su-text-soft: #ff8080;
+    --su-text-dim: #b84a4a;
+  }
+}

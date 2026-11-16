@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en" data-night="false">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Stellarium Ultra // Real-Time WebGL2 &amp; ERFA WASM Planetarium</title>
+  <meta name="description" content="Real-time WebGL2 planetarium observatory powered by Stellarium Web Engine WASM, featuring ERFA ephemeris, 24h planetary visibility curves, astronomical event calendar, telescope eyepiece simulator, and red night-vision UI." />
+  <link rel="icon" href="./favicon.ico" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="./styles/stellarium-ultra.css" />
+</head>
+<body>
+  <!-- NATIVE STELLARIUM C/C++/ERFA/WebGL2 WASM CANVAS -->
+  <canvas id="stel-canvas" aria-label="Stellarium Interactive Celestial Sphere"></canvas>
+  <div id="nightModeOverlay" aria-hidden="true"></div>
+  <div id="eyepieceMask" aria-hidden="true"></div>
+
+  <!-- STREAMING CATALOG PROGRESS BARS -->
+  <div id="stelProgressRack" aria-live="polite"></div>
+
+  <!-- INITIALIZATION SPLASH -->
+  <div id="bootCurtain" role="status">
+    <div class="boot-card">
+      <div class="boot-logo-row">
+        <img src="./symbols/logo.svg" alt="Stellarium" />
+        <span>STELLARIUM ULTRA</span>
+      </div>
+      <div class="boot-sub">Compiled C / ERFA / WebGL2 / NanoVG WASM</div>
+      <div class="boot-track"><i></i></div>
+      <div class="boot-status" id="bootStatus">Booting Astronomical Rendering Pipeline...</div>
+    </div>
+  </div>
+
+  <!-- TOP OBSERVATORY TOOLBAR -->
+  <header id="topBar">
+    <div class="top-left">
+      <button type="button" class="btn-nav-drawer" id="btnToggleObserving" title="Observing Guide, Planets Visibility &amp; Astronomical Calendar">
+        <span>&#9776; Observing</span>
+      </button>
+      <div class="brand-lockup">
+        <img src="./symbols/logo.svg" alt="Stellarium Logo" />
+        <div class="brand-names">
+          <strong>STELLARIUM</strong>
+          <span>Ultra Web Observatory</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="search-box">
+      <svg class="s-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"></circle>
+        <path d="M21 21l-4.35-4.35"></path>
+      </svg>
+      <input id="skySearchInput" type="search" autocomplete="off" placeholder="Search stars, planets, Messier, NGC, HIP... (e.g. Saturn, M31, Sirius)" />
+      <button type="button" class="s-clr" id="btnClearSearch" aria-label="Clear">&times;</button>
+      <div class="search-results" id="searchResults"></div>
+    </div>
+
+    <div class="top-right">
+      <div class="hud-tel">
+        <span id="hudCoords">FOV <b>72.0&deg;</b> &bull; AZ <b>165.0&deg;</b> &bull; ALT <b>+24.0&deg;</b></span>
+        <span class="fps-badge" id="hudFpsBadge">60 FPS</span>
+      </div>
+      <button type="button" class="btn-settings-top" id="btnOpenSettings" title="View Settings &amp; Astrophotography Tuners">
+        &#9881; View Settings
+      </button>
+    </div>
+  </header>
+
+  <!-- LEFT OBSERVATORY DRAWER (VISIBILITY TIMELINE, ERFA CALENDAR, WONDERS) -->
+  <aside id="obsDrawer" aria-label="Observatory Tools">
+    <div class="drawer-top">
+      <div class="drawer-title-row">
+        <h2>TONIGHT'S OBSERVATORY</h2>
+        <button type="button" class="btn-close-x" id="btnCloseDrawer" aria-label="Close Drawer">&times;</button>
+      </div>
+      <div class="drawer-tabs" id="drawerTabs">
+        <button type="button" class="active" data-tab="paneVisibility">Planets Tonight</button>
+        <button type="button" data-tab="paneCalendar">Sky Calendar</button>
+        <button type="button" data-tab="paneWonders">Deep Sky Tour</button>
+      </div>
+    </div>
+
+    <div class="drawer-body">
+      <div class="tab-pane active" id="paneVisibility">
+        <div class="vis-axis">
+          <span>Object</span>
+          <div class="hours"><span>12h</span><span>18h</span><span>00h</span><span>06h</span><span>12h</span></div>
+          <span style="text-align:right;">Alt</span>
+        </div>
+        <div id="visListHost"></div>
+      </div>
+
+      <div class="tab-pane" id="paneCalendar">
+        <div id="calListHost"></div>
+      </div>
+
+      <div class="tab-pane" id="paneWonders">
+        <div id="wondersListHost"></div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- RIGHT SELECTED OBJECT CARD -->
+  <section id="selectionCard" aria-live="polite" aria-label="Selected Celestial Object">
+    <div class="sc-head">
+      <div class="sc-icon-wrap">
+        <img id="scIcon" src="./symbols/target_types/star.svg" alt="" />
+      </div>
+      <div class="sc-titles">
+        <div class="sc-kicker" id="scKicker">OBJECT // EPHEMERIS</div>
+        <h3 id="scTitle">Celestial Body</h3>
+      </div>
+      <button type="button" class="btn-close-x" id="btnCloseCard" aria-label="Close Card">&times;</button>
+    </div>
+
+    <div class="sc-body">
+      <p class="sc-subnames" id="scSubnames"></p>
+
+      <div class="sc-kpi-grid">
+        <div class="kpi"><span>Magnitude</span><strong id="scMag">--</strong></div>
+        <div class="kpi"><span>Altitude</span><strong id="scAlt">--</strong></div>
+        <div class="kpi"><span>Azimuth</span><strong id="scAz">--</strong></div>
+      </div>
+
+      <div class="sc-astrometry" id="scAstrometry"></div>
+
+      <div class="eyepiece-box">
+        <div class="ep-head">
+          <span>Optical Telescope Framing</span>
+          <button type="button" id="btnEyepieceToggle">&#9711; Eyepiece Mask</button>
+        </div>
+        <div class="ep-presets" id="eyepiecePresets">
+          <button type="button" data-fov="72">Wide 72&deg;</button>
+          <button type="button" data-fov="8">Binoculars 8&deg;</button>
+          <button type="button" data-fov="2">Scope 2&deg;</button>
+          <button type="button" data-fov="0.5">Planetary 0.5&deg;</button>
+          <button type="button" data-fov="0.15">0.15&deg;</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="sc-foot">
+      <button type="button" class="primary" id="btnCardTrack">&#127919; Center &amp; Track</button>
+      <button type="button" id="btnCardZoom">&#128301; Zoom 2&deg; FOV</button>
+    </div>
+  </section>
+
+  <!-- BOTTOM OFFICIAL STELLARIUM DOCK -->
+  <nav id="bottomDock" aria-label="Sky Layer Controls">
+    <button type="button" class="stel-btn active" id="btnCstLines" title="Constellations Lines &amp; Labels">
+      <img src="./symbols/btn-cst-lines.svg" alt="Constellations" />
+    </button>
+    <button type="button" class="stel-btn active" id="btnCstArt" title="Constellation Artwork">
+      <img src="./symbols/btn-cst-art.svg" alt="Constellation Art" />
+    </button>
+    <button type="button" class="stel-btn active" id="btnAtmo" title="Preetham Atmosphere">
+      <img src="./symbols/btn-atmosphere.svg" alt="Atmosphere" />
+    </button>
+    <button type="button" class="stel-btn active" id="btnLandscape" title="Horizon Landscape">
+      <img src="./symbols/btn-landscape.svg" alt="Landscape" />
+    </button>
+    <button type="button" class="stel-btn" id="btnAzGrid" title="Azimuthal Grid (Alt/Az)">
+      <img src="./symbols/btn-azimuthal-grid.svg" alt="Azimuthal Grid" />
+    </button>
+    <button type="button" class="stel-btn" id="btnEqGrid" title="Equatorial Grid (RA/Dec)">
+      <img src="./symbols/btn-equatorial-grid.svg" alt="Equatorial Grid" />
+    </button>
+    <button type="button" class="stel-btn active" id="btnDso" title="Deep Sky Objects">
+      <img src="./symbols/btn-nebulae.svg" alt="Deep Sky Objects" />
+    </button>
+    <button type="button" class="stel-btn active" id="btnMilkyWay" title="Milky Way HiPS">
+      <span class="glyph-ico">&#10035;</span>
+    </button>
+    <button type="button" class="stel-btn" id="btnNightMode" title="Red Astronomer Night Mode">
+      <img src="./symbols/btn-night-mode.svg" alt="Night Mode" />
+    </button>
+
+    <span class="dock-sep"></span>
+
+    <button type="button" class="stel-btn" id="btnZoomOut" title="Zoom Out">
+      <img src="./symbols/ui/remove_circle_outline.svg" alt="Zoom Out" />
+    </button>
+    <button type="button" class="stel-btn" id="btnZoomIn" title="Zoom In">
+      <img src="./symbols/ui/add_circle_outline.svg" alt="Zoom In" />
+    </button>
+    <button type="button" class="stel-btn" id="btnUnlock" style="display:none;" title="Release Tracking Lock">
+      <span class="glyph-ico">&#128275;</span>
+    </button>
+    <button type="button" class="stel-btn" id="btnResetView" title="Reset Camera Horizon">
+      <img src="./symbols/ui/point_to.svg" alt="Reset Camera" />
+    </button>
+    <button type="button" class="stel-btn" id="btnFullscreen" title="Toggle Fullscreen">
+      <img id="icoFullscreen" src="./symbols/ui/fullscreen.svg" alt="Fullscreen" />
+    </button>
+  </nav>
+
+  <!-- OBSERVER LOCATION BADGE -->
+  <button type="button" class="corner-chip left" id="locChip" title="Change Observatory Location or GPS">
+    <strong id="locBadgeTitle">Sofia Observatory</strong>
+    <span id="locBadgeCoords">42.70&deg;N &middot; 23.32&deg;E</span>
+  </button>
+
+  <!-- LIVE DATE & TIME BADGE -->
+  <button type="button" class="corner-chip right" id="clockChip" title="Open Astronomical Date, Time &amp; Speed Controls">
+    <strong id="clockTimeMain">--:--:--</strong>
+    <span id="clockDateSub">Astronomical Dusk</span>
+  </button>
+  <div class="agpl-credit">
+    Stellarium Web Engine (<a href="./LICENSE-AGPL-3.0.txt" target="_blank" rel="noopener">GNU AGPL v3</a>)
+  </div>
+
+  <!-- DATE & TIME PICKER POPOVER (24H SOLAR SKY GRADIENT SCRUBBER) -->
+  <div id="timePopover" role="dialog" aria-label="Date and Time Scrubber">
+    <div class="tp-head">
+      <span>Date &amp; Time Controls</span>
+      <div style="display:flex;gap:5px;">
+        <button type="button" class="btn-nav-drawer" style="height:24px;padding:0 9px;font-size:10.5px;" id="btnTimeNow">Now</button>
+        <button type="button" class="btn-nav-drawer" style="height:24px;padding:0 9px;font-size:10.5px;" id="btnTimeDusk">Dusk</button>
+        <button type="button" class="btn-nav-drawer" style="height:24px;padding:0 9px;font-size:10.5px;" id="btnTimePause">Pause</button>
+      </div>
+    </div>
+
+    <div class="tp-steppers">
+      <div class="stepper-blk">
+        <div class="unit-col">
+          <button type="button" data-unit="year" data-delta="1">&#9650;</button>
+          <b id="tpYear">2026</b>
+          <button type="button" data-unit="year" data-delta="-1">&#9660;</button>
+        </div>
+        <div class="unit-col">
+          <button type="button" data-unit="month" data-delta="1">&#9650;</button>
+          <b id="tpMonth">11</b>
+          <button type="button" data-unit="month" data-delta="-1">&#9660;</button>
+        </div>
+        <div class="unit-col">
+          <button type="button" data-unit="day" data-delta="1">&#9650;</button>
+          <b id="tpDay">16</b>
+          <button type="button" data-unit="day" data-delta="-1">&#9660;</button>
+        </div>
+      </div>
+
+      <span style="color:var(--su-text-dim);font-size:12px;">&bull;</span>
+
+      <div class="stepper-blk">
+        <div class="unit-col">
+          <button type="button" data-unit="hour" data-delta="1">&#9650;</button>
+          <b id="tpHour">20</b>
+          <button type="button" data-unit="hour" data-delta="-1">&#9660;</button>
+        </div>
+        <div class="unit-col">
+          <button type="button" data-unit="min" data-delta="5">&#9650;</button>
+          <b id="tpMin">00</b>
+          <button type="button" data-unit="min" data-delta="-5">&#9660;</button>
+        </div>
+        <div class="unit-col">
+          <button type="button" data-unit="sec" data-delta="15">&#9650;</button>
+          <b id="tpSec">00</b>
+          <button type="button" data-unit="sec" data-delta="-15">&#9660;</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="sky-slider-wrap">
+      <div class="sky-grad-bar" id="skyGradBar"></div>
+      <input id="tpMinuteSlider" type="range" min="0" max="1439" step="1" value="1200" />
+    </div>
+
+    <div class="tp-speeds" id="tpSpeeds">
+      <button type="button" data-speed="-1000">-1000&times;</button>
+      <button type="button" data-speed="-100">-100&times;</button>
+      <button type="button" data-speed="0">0&times;</button>
+      <button type="button" class="active" data-speed="1">1&times;</button>
+      <button type="button" data-speed="10">10&times;</button>
+      <button type="button" data-speed="100">100&times;</button>
+      <button type="button" data-speed="1000">1000&times;</button>
+    </div>
+  </div>
+
+  <!-- VIEW SETTINGS DIALOG -->
+  <div class="su-modal" id="settingsModal" role="dialog" aria-label="View Settings">
+    <div class="su-dialog">
+      <div class="dlg-head">
+        <h3>VIEW SETTINGS &amp; ASTROPHOTOGRAPHY</h3>
+        <button type="button" class="btn-close-x" id="btnCloseSettings">&times;</button>
+      </div>
+
+      <div class="settings-grid">
+        <div class="sg-box">
+          <label><span>Exposure Gain</span><b id="lblExposure">1.10&times;</b></label>
+          <input id="rngExposure" type="range" min="0.3" max="4.0" step="0.05" value="1.1" />
+        </div>
+        <div class="sg-box">
+          <label><span>Bortle Light Pollution</span><b id="lblBortle">Class 2</b></label>
+          <input id="rngBortle" type="range" min="1" max="9" step="1" value="2" />
+        </div>
+        <div class="sg-box">
+          <label><span>Star Relative Scale</span><b id="lblStarScale">1.10&times;</b></label>
+          <input id="rngStarScale" type="range" min="0.5" max="2.4" step="0.05" value="1.1" />
+        </div>
+        <div class="sg-box">
+          <label><span>Sky Culture Mythology</span></label>
+          <select id="selSkyCulture">
+            <option value="western" selected>Western (IAU 88 + Artwork)</option>
+            <option value="belarusian">Belarusian Folk Lore</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="toggle-list">
+        <label class="t-chk"><input type="checkbox" id="chkMilkyWay" checked /> Milky Way HiPS</label>
+        <label class="t-chk"><input type="checkbox" id="chkDsos" checked /> Deep Sky Objects</label>
+        <label class="t-chk"><input type="checkbox" id="chkSatellites" checked /> Artificial Satellites (TLE)</label>
+        <label class="t-chk"><input type="checkbox" id="chkComets" checked /> Comets (MPC)</label>
+        <label class="t-chk"><input type="checkbox" id="chkMinorPlanets" checked /> Minor Planets / Asteroids</label>
+        <label class="t-chk"><input type="checkbox" id="chkPlanetHints" checked /> Solar System Labels</label>
+        <label class="t-chk"><input type="checkbox" id="chkEcliptic" /> Ecliptic Line</label>
+        <label class="t-chk"><input type="checkbox" id="chkMeridian" /> Celestial Meridian</label>
+        <label class="t-chk"><input type="checkbox" id="chkBigMoon" /> 4&times; Supermoon Magnifier</label>
+        <label class="t-chk"><input type="checkbox" id="chkShowFps" /> Show Live Engine FPS</label>
+      </div>
+    </div>
+  </div>
+
+  <!-- OBSERVER LOCATION DIALOG -->
+  <div class="su-modal" id="locationModal" role="dialog" aria-label="Observer Location">
+    <div class="su-dialog">
+      <div class="dlg-head">
+        <h3>OBSERVER COORDINATES &amp; WORLD MAP</h3>
+        <button type="button" class="btn-close-x" id="btnCloseLocation">&times;</button>
+      </div>
+
+      <div class="loc-presets-grid" id="locPresetsGrid"></div>
+      <div id="locLeafletMap"></div>
+
+      <div class="loc-manual-row">
+        <input id="inpLat" type="number" step="0.0001" placeholder="Latitude" value="42.6977" />
+        <input id="inpLon" type="number" step="0.0001" placeholder="Longitude" value="23.3219" />
+        <input id="inpElev" type="number" step="10" placeholder="Elevation (m)" value="590" />
+        <div style="display:flex;gap:5px;">
+          <button type="button" id="btnApplyLatLon" style="flex:1;">Set</button>
+          <button type="button" id="btnGpsDetect" style="flex:1;">GPS</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RUNTIME SCRIPTS (NO SPINNING SPHERES — 100% STELLARIUM WASM) -->
+  <script src="./engine/stellarium-web-engine.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
+  <script src="./scripts/stellarium-ultra.js" defer></script>
+</body>
+</html>
