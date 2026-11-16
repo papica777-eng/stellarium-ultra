@@ -94,6 +94,7 @@
     calendarEvents: [],
     skyCultureKey: 'western',
     hdrPostFx: null,
+    astroRenderer: null,
     leafletMap: null,
     leafletMarker: null,
     timeRepeatTimer: null
@@ -318,6 +319,10 @@
             updateHudReadout();
           }
         });
+
+        if (!state.astroRenderer && typeof window.MillenniumAstroRenderer === 'function') {
+          state.astroRenderer = new window.MillenniumAstroRenderer($('astroChamberCanvas'), './engine/exodus_astrophysics_engine.wasm');
+        }
 
         renderWondersTab();
         syncBottomDock();
@@ -941,6 +946,62 @@
       if (!btn || !state.stel) return;
       if (state.selectedObj) state.stel.pointAndLock(state.selectedObj, 0.7);
       state.stel.zoomTo(Number(btn.dataset.fov) * D2R, 0.9);
+    });
+
+    // 1:1 Millennium Astrophysics Telescope Chamber (Rust WASM + GLSL ES 3.00)
+    const openAstroChamber = () => {
+      if (!state.stel || !state.selectedObj || typeof window.MillenniumAstroRenderer !== 'function') return;
+      if (!state.astroRenderer) {
+        state.astroRenderer = new window.MillenniumAstroRenderer($('astroChamberCanvas'), './engine/exodus_astrophysics_engine.wasm');
+      }
+      const names = (state.selectedObj.designations && state.selectedObj.designations()) || [];
+      const primary = (names[0] || 'Celestial Object').replace(/^NAME\s+/i, '');
+      const phys = state.astroRenderer.solveObject(state.stel, state.selectedObj, primary);
+
+      $('chTitle').textContent = primary;
+      $('chSub').textContent = phys.label || 'Millennium Rust WASM + GLSL ES 3.00 Radiative Transfer';
+
+      let html = `
+        <div class="ct-box"><span>Shader Kernel</span><b>${['Planck + MHD Corona', 'Rayleigh / Hapke + Rings', 'Sersic + Dust Radiative', 'Volumetric Ha / OIII', 'King Dynamical Profile'][phys.kind]}</b></div>
+        <div class="ct-box"><span>Blackbody / Temp</span><b>${Math.round(phys.tempK)} K</b></div>
+        <div class="ct-box"><span>Wien Peak (&lambda;max)</span><b>${Math.round(phys.wienNm)} nm</b></div>
+      `;
+      if (phys.kind === 0) {
+        html += `
+          <div class="ct-box"><span>Claret Limb (u1, u2)</span><b>${phys.limbU[0].toFixed(2)}, ${phys.limbU[1].toFixed(2)}</b></div>
+          <div class="ct-box"><span>Von Zeipel Oblateness</span><b>${(phys.oblate * 100).toFixed(1)}%</b></div>
+        `;
+      } else if (phys.kind === 1) {
+        html += `
+          <div class="ct-box"><span>ERFA Solar Phase (&alpha;)</span><b>${phys.solarSidePhaseDeg.toFixed(1)}&deg;</b></div>
+          <div class="ct-box"><span>Lit Disc Fraction</span><b>${(phys.litFrac * 100).toFixed(1)}%</b></div>
+        `;
+      } else {
+        html += `
+          <div class="ct-box"><span>Sersic / Profile n</span><b>${phys.sersicN.toFixed(2)}</b></div>
+          <div class="ct-box"><span>Tilt Inclination</span><b>${(phys.incRad * R2D).toFixed(1)}&deg;</b></div>
+        `;
+      }
+      $('chTelemetry').innerHTML = html;
+
+      $('astroChamberModal').classList.add('open');
+      state.astroRenderer.start();
+    };
+
+    $('btnOpenChamber').addEventListener('click', openAstroChamber);
+    const closeChamber = () => {
+      $('astroChamberModal').classList.remove('open');
+      if (state.astroRenderer) state.astroRenderer.stop();
+    };
+    $('btnCloseChamber').addEventListener('click', closeChamber);
+    $('astroChamberModal').addEventListener('click', (e) => {
+      if (e.target === $('astroChamberModal')) closeChamber();
+    });
+    $('chBands').addEventListener('click', (ev) => {
+      const btn = ev.target.closest('button[data-band]');
+      if (!btn || !state.astroRenderer) return;
+      state.astroRenderer.band = Number(btn.dataset.band);
+      document.querySelectorAll('#chBands button').forEach((b) => b.classList.toggle('active', b === btn));
     });
 
     // Bottom Dock Toggles

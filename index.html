@@ -148,8 +148,11 @@
     </div>
 
     <div class="sc-foot">
-      <button type="button" class="primary" id="btnCardTrack">&#127919; Center &amp; Track</button>
-      <button type="button" id="btnCardZoom">&#128301; Zoom 2&deg; FOV</button>
+      <button type="button" class="physics-cta" id="btnOpenChamber">&#128300; 1:1 Physics Telescope View (Rust WASM + GLSL)</button>
+      <div class="sc-foot-row">
+        <button type="button" class="primary" id="btnCardTrack">&#127919; Center &amp; Track</button>
+        <button type="button" id="btnCardZoom">&#128301; Zoom 2&deg; FOV</button>
+      </div>
     </div>
   </section>
 
@@ -372,10 +375,37 @@
     </div>
   </div>
 
-  <!-- RUNTIME SCRIPTS (STELLARIUM WASM + MILLENNIUM HDR POST-FX) -->
+  <!-- 1:1 MILLENNIUM ASTROPHYSICS TELESCOPE CHAMBER (RUST WASM + GLSL ES 3.00) -->
+  <div class="su-modal" id="astroChamberModal" role="dialog" aria-label="1:1 Physical Astrophysics Chamber">
+    <div class="su-dialog chamber-dialog">
+      <div class="ch-bar">
+        <div class="ch-title-grp">
+          <strong id="chTitle">Astrophysics Chamber</strong>
+          <span id="chSub">Millennium Rust WASM + GLSL ES 3.00 Radiative Transfer</span>
+        </div>
+        <div class="ch-bands" id="chBands">
+          <button type="button" class="active" data-band="0">Optical 1:1</button>
+          <button type="button" data-band="1">H&alpha; / [O III]</button>
+          <button type="button" data-band="2">Infrared 2MASS</button>
+          <button type="button" data-band="3">UV / Plasma</button>
+        </div>
+        <button type="button" class="btn-close-x" id="btnCloseChamber">&times;</button>
+      </div>
+
+      <div class="ch-viewport-wrap">
+        <canvas id="astroChamberCanvas"></canvas>
+        <div class="ch-overlay-hint">Drag to inspect 3D geometry &bull; Scroll to magnify &bull; Illumination locked to ERFA solar phase</div>
+      </div>
+
+      <div class="ch-telemetry" id="chTelemetry"></div>
+    </div>
+  </div>
+
+  <!-- RUNTIME SCRIPTS (STELLARIUM WASM + MILLENNIUM HDR + ASTROPHYSICS KERNEL) -->
   <script src="./engine/stellarium-web-engine.js"></script>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
   <script src="./scripts/aeterna-hdr-postfx.js" defer></script>
+  <script src="./scripts/millennium-astro-renderer.js" defer></script>
   <script src="./scripts/stellarium-ultra.js" defer></script>
 </body>
 </html>
